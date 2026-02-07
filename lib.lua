@@ -648,6 +648,18 @@ function CoralX:Window(config)
         PageLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
             Page.CanvasSize = UDim2.new(0, 0, 0, PageLayout.AbsoluteContentSize.Y + 10)
         end)
+        
+        local SectionTitle = Instance.new("TextLabel")
+        SectionTitle.Name = "SectionTitle"
+        SectionTitle.Size = UDim2.new(1, 0, 0, 40)
+        SectionTitle.BackgroundTransparency = 1
+        SectionTitle.Font = Enum.Font.GothamBold
+        SectionTitle.Text = name
+        SectionTitle.TextColor3 = Colors.TextPrimary
+        SectionTitle.TextSize = 22
+        SectionTitle.TextXAlignment = Enum.TextXAlignment.Left
+        SectionTitle.LayoutOrder = -1
+        SectionTitle.Parent = Page
         local function Activate()
             for _, child in pairs(TabContainer:GetChildren()) do
                 if child:IsA("TextButton") then
@@ -1016,195 +1028,407 @@ function CoralX:Window(config)
                 end
             end)
         end
+        function Tab:Paragraph(title, content)
+            title = title or ""
+            content = content or ""
+            local ParagraphFrame = Instance.new("Frame")
+            ParagraphFrame.Name = "Paragraph"
+            ParagraphFrame.Size = UDim2.new(1, -4, 0, 50)
+            ParagraphFrame.BackgroundColor3 = Colors.GlassDark
+            ParagraphFrame.BackgroundTransparency = 0.5
+            ParagraphFrame.BorderSizePixel = 0
+            ParagraphFrame.Parent = Page
+            local ParagraphCorner = Instance.new("UICorner")
+            ParagraphCorner.CornerRadius = UDim.new(0, 6)
+            ParagraphCorner.Parent = ParagraphFrame
+            local ParagraphStroke = Instance.new("UIStroke")
+            ParagraphStroke.Color = Colors.Border
+            ParagraphStroke.Thickness = 1
+            ParagraphStroke.Transparency = 0.7
+            ParagraphStroke.Parent = ParagraphFrame
+            local TitleLabel = Instance.new("TextLabel")
+            TitleLabel.Size = UDim2.new(1, -24, 0, 16)
+            TitleLabel.Position = UDim2.new(0, 12, 0, 8)
+            TitleLabel.BackgroundTransparency = 1
+            TitleLabel.Font = Enum.Font.GothamBold
+            TitleLabel.Text = title
+            TitleLabel.TextColor3 = config.Color
+            TitleLabel.TextSize = 13
+            TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+            TitleLabel.Parent = ParagraphFrame
+            local ContentLabel = Instance.new("TextLabel")
+            ContentLabel.Size = UDim2.new(1, -24, 0, 16)
+            ContentLabel.Position = UDim2.new(0, 12, 0, 26)
+            ContentLabel.BackgroundTransparency = 1
+            ContentLabel.Font = Enum.Font.Gotham
+            ContentLabel.Text = content
+            ContentLabel.TextColor3 = Colors.TextSecondary
+            ContentLabel.TextSize = 12
+            ContentLabel.TextXAlignment = Enum.TextXAlignment.Left
+            ContentLabel.TextWrapped = true
+            ContentLabel.RichText = true
+            ContentLabel.Parent = ParagraphFrame
+            local function UpdateSize()
+                ContentLabel.TextWrapped = false
+                local textBounds = ContentLabel.TextBounds
+                local lines = math.ceil(textBounds.X / (ParagraphFrame.AbsoluteSize.X - 24))
+                lines = math.max(lines, 1)
+                ContentLabel.Size = UDim2.new(1, -24, 0, 12 * lines)
+                ContentLabel.TextWrapped = true
+                local totalHeight = 8 + 16 + 4 + (12 * lines) + 10
+                ParagraphFrame.Size = UDim2.new(1, -4, 0, totalHeight)
+            end
+            ParagraphFrame:GetPropertyChangedSignal("AbsoluteSize"):Connect(UpdateSize)
+            spawn(function() wait() UpdateSize() end)
+            local ParagraphAPI = {}
+            function ParagraphAPI:SetTitle(newTitle)
+                TitleLabel.Text = newTitle
+            end
+            function ParagraphAPI:SetContent(newContent)
+                ContentLabel.Text = newContent
+                UpdateSize()
+            end
+            return ParagraphAPI
+        end
+        
+        local DropdownPanel = Instance.new("Frame")
+        DropdownPanel.Name = "DropdownPanel"
+        DropdownPanel.AnchorPoint = Vector2.new(0, 0)
+        DropdownPanel.Position = UDim2.new(1, 0, 0, 50)
+        DropdownPanel.Size = UDim2.new(0, 160, 1, -58)
+        DropdownPanel.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+        DropdownPanel.BackgroundTransparency = 0
+        DropdownPanel.BorderSizePixel = 0
+        DropdownPanel.ClipsDescendants = true
+        DropdownPanel.Visible = false
+        DropdownPanel.ZIndex = 20
+        DropdownPanel.Parent = MainFrame
+        
+        local PanelCorner = Instance.new("UICorner")
+        PanelCorner.CornerRadius = UDim.new(0, 6)
+        PanelCorner.Parent = DropdownPanel
+        
+        local PanelStroke = Instance.new("UIStroke")
+        PanelStroke.Color = config.Color
+        PanelStroke.Thickness = 1.5
+        PanelStroke.Transparency = 0.3
+        PanelStroke.Parent = DropdownPanel
+        
+        local PanelTitle = Instance.new("Frame")
+        PanelTitle.Name = "TitleBar"
+        PanelTitle.Size = UDim2.new(1, 0, 0, 32)
+        PanelTitle.BackgroundColor3 = config.Color
+        PanelTitle.BackgroundTransparency = 0.7
+        PanelTitle.BorderSizePixel = 0
+        PanelTitle.ZIndex = 21
+        PanelTitle.Parent = DropdownPanel
+        
+        local TitleText = Instance.new("TextLabel")
+        TitleText.Name = "TitleText"
+        TitleText.Size = UDim2.new(1, -30, 1, 0)
+        TitleText.Position = UDim2.new(0, 10, 0, 0)
+        TitleText.BackgroundTransparency = 1
+        TitleText.Font = Enum.Font.GothamBold
+        TitleText.Text = "Select"
+        TitleText.TextColor3 = Colors.TextPrimary
+        TitleText.TextSize = 12
+        TitleText.TextXAlignment = Enum.TextXAlignment.Left
+        TitleText.ZIndex = 22
+        TitleText.Parent = PanelTitle
+        
+        local CloseDropBtn = Instance.new("TextButton")
+        CloseDropBtn.Name = "CloseBtn"
+        CloseDropBtn.Size = UDim2.new(0, 20, 0, 20)
+        CloseDropBtn.Position = UDim2.new(1, -26, 0.5, -10)
+        CloseDropBtn.BackgroundTransparency = 1
+        CloseDropBtn.Font = Enum.Font.GothamBold
+        CloseDropBtn.Text = "×"
+        CloseDropBtn.TextColor3 = Colors.TextSecondary
+        CloseDropBtn.TextSize = 18
+        CloseDropBtn.ZIndex = 22
+        CloseDropBtn.Parent = PanelTitle
+        
+        local PanelSearchBar = Instance.new("Frame")
+        PanelSearchBar.Name = "SearchBar"
+        PanelSearchBar.Size = UDim2.new(1, -16, 0, 26)
+        PanelSearchBar.Position = UDim2.new(0, 8, 0, 38)
+        PanelSearchBar.BackgroundColor3 = Colors.GlassLight
+        PanelSearchBar.BackgroundTransparency = 0.7
+        PanelSearchBar.Visible = false
+        PanelSearchBar.ZIndex = 21
+        PanelSearchBar.Parent = DropdownPanel
+        
+        local SearchBarCorner = Instance.new("UICorner")
+        SearchBarCorner.CornerRadius = UDim.new(0, 4)
+        SearchBarCorner.Parent = PanelSearchBar
+        
+        local PanelSearchInput = Instance.new("TextBox")
+        PanelSearchInput.Size = UDim2.new(1, -10, 1, 0)
+        PanelSearchInput.Position = UDim2.new(0, 5, 0, 0)
+        PanelSearchInput.BackgroundTransparency = 1
+        PanelSearchInput.Font = Enum.Font.Gotham
+        PanelSearchInput.PlaceholderText = "Search..."
+        PanelSearchInput.Text = ""
+        PanelSearchInput.TextColor3 = Colors.TextPrimary
+        PanelSearchInput.PlaceholderColor3 = Colors.TextMuted
+        PanelSearchInput.TextSize = 11
+        PanelSearchInput.ZIndex = 22
+        PanelSearchInput.Parent = PanelSearchBar
+        
+        local PanelItems = Instance.new("ScrollingFrame")
+        PanelItems.Name = "Items"
+        PanelItems.Size = UDim2.new(1, -10, 1, -40)
+        PanelItems.Position = UDim2.new(0, 5, 0, 36)
+        PanelItems.BackgroundTransparency = 1
+        PanelItems.BorderSizePixel = 0
+        PanelItems.ScrollBarThickness = 2
+        PanelItems.ScrollBarImageColor3 = config.Color
+        PanelItems.CanvasSize = UDim2.new(0, 0, 0, 0)
+        PanelItems.ZIndex = 21
+        PanelItems.Parent = DropdownPanel
+        
+        local ItemsLayout = Instance.new("UIListLayout")
+        ItemsLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        ItemsLayout.Padding = UDim.new(0, 2)
+        ItemsLayout.Parent = PanelItems
+        
+        local ItemsPadding = Instance.new("UIPadding")
+        ItemsPadding.PaddingTop = UDim.new(0, 2)
+        ItemsPadding.Parent = PanelItems
+        
+        local currentDropdownCallback = nil
+        local currentDropdownSelected = nil
+        local currentDropdownMulti = false
+        local currentDropdownLabel = nil
+        local currentDropdownText = ""
+        local currentDropdownOptions = {}
+        local dropdownOpen = false
+        
+        local function CloseDropdownPanel()
+            if not dropdownOpen then return end
+            dropdownOpen = false
+            TweenService:Create(DropdownPanel, TweenInfo.new(0.2, Enum.EasingStyle.Quint), {
+                Position = UDim2.new(1, 0, 0, 50)
+            }):Play()
+            task.delay(0.2, function()
+                DropdownPanel.Visible = false
+            end)
+        end
+        
+        CloseDropBtn.MouseButton1Click:Connect(CloseDropdownPanel)
+        
+        local function RefreshDropdownItems(searchText)
+            for _, child in pairs(PanelItems:GetChildren()) do
+                if child:IsA("TextButton") then child:Destroy() end
+            end
+            
+            local count = 0
+            for _, option in ipairs(currentDropdownOptions) do
+                if not searchText or searchText == "" or string.find(string.lower(option), string.lower(searchText)) then
+                    local Item = Instance.new("TextButton")
+                    Item.Size = UDim2.new(1, -4, 0, 26)
+                    Item.BackgroundColor3 = Colors.GlassLight
+                    Item.BackgroundTransparency = 0.9
+                    Item.Text = ""
+                    Item.AutoButtonColor = false
+                    Item.ZIndex = 22
+                    Item.Parent = PanelItems
+                    
+                    local ItemCorner = Instance.new("UICorner")
+                    ItemCorner.CornerRadius = UDim.new(0, 4)
+                    ItemCorner.Parent = Item
+                    
+                    local ItemText = Instance.new("TextLabel")
+                    ItemText.Size = UDim2.new(1, -36, 1, 0)
+                    ItemText.Position = UDim2.new(0, 10, 0, 0)
+                    ItemText.BackgroundTransparency = 1
+                    ItemText.Font = Enum.Font.GothamMedium
+                    ItemText.Text = option
+                    ItemText.TextColor3 = Colors.TextSecondary
+                    ItemText.TextSize = 11
+                    ItemText.TextXAlignment = Enum.TextXAlignment.Left
+                    ItemText.ZIndex = 23
+                    ItemText.Parent = Item
+                    
+                    local Checkmark = Instance.new("ImageLabel")
+                    Checkmark.Size = UDim2.new(0, 14, 0, 14)
+                    Checkmark.Position = UDim2.new(1, -20, 0.5, -7)
+                    Checkmark.BackgroundTransparency = 1
+                    Checkmark.Image = "rbxassetid://6031094678"
+                    Checkmark.ImageColor3 = config.Color
+                    Checkmark.ImageTransparency = 1
+                    Checkmark.ZIndex = 23
+                    Checkmark.Parent = Item
+                    
+                    local isSelected = false
+                    if currentDropdownMulti then
+                        if type(currentDropdownSelected) == "table" then
+                            for _, s in pairs(currentDropdownSelected) do 
+                                if s == option then isSelected = true break end 
+                            end
+                        end
+                    else
+                        isSelected = (currentDropdownSelected == option)
+                    end
+                    
+                    if isSelected then
+                        ItemText.TextColor3 = config.Color
+                        Item.BackgroundTransparency = 0.7
+                        Checkmark.ImageTransparency = 0
+                    end
+                    
+                    Item.MouseEnter:Connect(function()
+                        TweenService:Create(Item, TweenInfo.new(0.15), {BackgroundTransparency = 0.6}):Play()
+                    end)
+                    Item.MouseLeave:Connect(function()
+                        local transp = isSelected and 0.7 or 0.9
+                        TweenService:Create(Item, TweenInfo.new(0.15), {BackgroundTransparency = transp}):Play()
+                    end)
+                    
+                    Item.MouseButton1Click:Connect(function()
+                        if currentDropdownMulti then
+                            local found = false
+                            local index = 0
+                            for i, s in pairs(currentDropdownSelected) do
+                                if s == option then found = true index = i break end
+                            end
+                            if found then
+                                table.remove(currentDropdownSelected, index)
+                            else
+                                table.insert(currentDropdownSelected, option)
+                            end
+                            if currentDropdownLabel then
+                                currentDropdownLabel.Text = currentDropdownText .. ": [" .. #currentDropdownSelected .. "]"
+                            end
+                        else
+                            currentDropdownSelected = option
+                            if currentDropdownLabel then
+                                currentDropdownLabel.Text = currentDropdownText .. ": " .. tostring(option)
+                            end
+                        end
+                        
+                        pcall(currentDropdownCallback, currentDropdownSelected)
+                        RefreshDropdownItems(PanelSearchInput.Text)
+                        
+                        if not currentDropdownMulti then
+                            CloseDropdownPanel()
+                        end
+                    end)
+                    
+                    count = count + 1
+                end
+            end
+            
+            PanelItems.CanvasSize = UDim2.new(0, 0, 0, (count * 31) + 8)
+        end
+        
+        PanelSearchInput:GetPropertyChangedSignal("Text"):Connect(function()
+            RefreshDropdownItems(PanelSearchInput.Text)
+        end)
+        
         local function CreateDropdown(text, options, default, callback, search, multi)
             options = options or {}
             default = default or (multi and {} or options[1])
             callback = callback or function() end
-            local expanded = false
-            local DropdownFrame = Instance.new("Frame")
+            local selected = default
+            
+            local DropdownFrame = Instance.new("TextButton")
             DropdownFrame.Name = "Dropdown"
             DropdownFrame.Size = UDim2.new(1, -4, 0, 38)
             DropdownFrame.BackgroundColor3 = Colors.GlassDark
             DropdownFrame.BackgroundTransparency = 0.5
             DropdownFrame.BorderSizePixel = 0
-            DropdownFrame.ClipsDescendants = true
+            DropdownFrame.Text = ""
+            DropdownFrame.AutoButtonColor = false
             DropdownFrame.Parent = Page
+            
             local DropCorner = Instance.new("UICorner")
             DropCorner.CornerRadius = UDim.new(0, 6)
             DropCorner.Parent = DropdownFrame
+            
             local DropStroke = Instance.new("UIStroke")
             DropStroke.Color = Colors.Border
             DropStroke.Thickness = 1
             DropStroke.Transparency = 0.7
             DropStroke.Parent = DropdownFrame
+            
             local DropLabel = Instance.new("TextLabel")
-            DropLabel.Size = UDim2.new(1, -40, 0, 38)
+            DropLabel.Size = UDim2.new(1, -40, 1, 0)
             DropLabel.Position = UDim2.new(0, 12, 0, 0)
             DropLabel.BackgroundTransparency = 1
             DropLabel.Font = Enum.Font.GothamMedium
-            DropLabel.Text = text
             DropLabel.TextColor3 = Colors.TextSecondary
             DropLabel.TextSize = 13
             DropLabel.TextXAlignment = Enum.TextXAlignment.Left
             DropLabel.Parent = DropdownFrame
+            
+            if multi then
+                DropLabel.Text = text .. ": [" .. #selected .. "]"
+            else
+                DropLabel.Text = text .. ": " .. tostring(selected or "None")
+            end
+            
             local Arrow = Instance.new("ImageLabel")
-            Arrow.Size = UDim2.new(0, 20, 0, 20)
-            Arrow.Position = UDim2.new(1, -32, 0, 9)
+            Arrow.Size = UDim2.new(0, 16, 0, 16)
+            Arrow.Position = UDim2.new(1, -28, 0.5, -8)
             Arrow.BackgroundTransparency = 1
             Arrow.Image = "rbxassetid://6034818372"
             Arrow.ImageColor3 = Colors.TextSecondary
             Arrow.Parent = DropdownFrame
-            local DropButton = Instance.new("TextButton")
-            DropButton.Size = UDim2.new(1, 0, 0, 38)
-            DropButton.BackgroundTransparency = 1
-            DropButton.Text = ""
-            DropButton.Parent = DropdownFrame
-            local ItemContainer = Instance.new("ScrollingFrame")
-            ItemContainer.Size = UDim2.new(1, 0, 0, 0)
-            ItemContainer.Position = UDim2.new(0, 0, 0, 38)
-            ItemContainer.BackgroundTransparency = 1
-            ItemContainer.BorderSizePixel = 0
-            ItemContainer.ScrollBarThickness = 2
-            ItemContainer.ScrollBarImageColor3 = config.Color
-            ItemContainer.CanvasSize = UDim2.new(0, 0, 0, 0)
-            ItemContainer.Parent = DropdownFrame
-            local ItemLayout = Instance.new("UIListLayout")
-            ItemLayout.SortOrder = Enum.SortOrder.LayoutOrder
-            ItemLayout.Padding = UDim.new(0, 2)
-            ItemLayout.Parent = ItemContainer
-            local SearchBar, SearchInput
-            if search then
-                SearchBar = Instance.new("Frame")
-                SearchBar.Name = "SearchBar"
-                SearchBar.Size = UDim2.new(1, -16, 0, 28)
-                SearchBar.Position = UDim2.new(0, 8, 0, 42)
-                SearchBar.BackgroundColor3 = Colors.GlassLight
-                SearchBar.BackgroundTransparency = 0.7
-                SearchBar.ZIndex = 8
-                SearchBar.Parent = DropdownFrame
-                local SearchCorner = Instance.new("UICorner")
-                SearchCorner.CornerRadius = UDim.new(0, 4)
-                SearchCorner.Parent = SearchBar
-                SearchInput = Instance.new("TextBox")
-                SearchInput.Size = UDim2.new(1, -10, 1, 0)
-                SearchInput.Position = UDim2.new(0, 5, 0, 0)
-                SearchInput.BackgroundTransparency = 1
-                SearchInput.Font = Enum.Font.Gotham
-                SearchInput.PlaceholderText = "Search..."
-                SearchInput.Text = ""
-                SearchInput.TextColor3 = Colors.TextPrimary
-                SearchInput.PlaceholderColor3 = Colors.TextMuted
-                SearchInput.TextSize = 12
-                SearchInput.ZIndex = 9
-                SearchInput.Parent = SearchBar
-                ItemContainer.Position = UDim2.new(0, 0, 0, 74)
-            else
-                local Padding = Instance.new("UIPadding")
-                Padding.PaddingTop = UDim.new(0, 4)
-                Padding.PaddingLeft = UDim.new(0, 8)
-                Padding.PaddingRight = UDim.new(0, 8)
-                Padding.Parent = ItemContainer
-            end
-            local currentItems = {}
-            local selected = default
-            local function RefreshItems(searchText)
-                for _, child in pairs(ItemContainer:GetChildren()) do
-                    if child:IsA("TextButton") then child:Destroy() end
-                end
-                local count = 0
-                for _, option in ipairs(options) do
-                    if not searchText or string.find(string.lower(option), string.lower(searchText)) then
-                        local Item = Instance.new("TextButton")
-                        Item.Size = UDim2.new(1, -16, 0, 24)
-                        Item.Position = UDim2.new(0, 8, 0, 0)
-                        Item.BackgroundColor3 = Colors.GlassLight
-                        Item.BackgroundTransparency = 1
-                        Item.Text = option
-                        Item.Font = Enum.Font.GothamMedium
-                        Item.TextColor3 = Colors.TextSecondary
-                        Item.TextSize = 12
-                        Item.AutoButtonColor = false
-                        Item.Parent = ItemContainer
-                        local ItemCorner = Instance.new("UICorner")
-                        ItemCorner.CornerRadius = UDim.new(0, 4)
-                        ItemCorner.Parent = Item
-                        local isSelected = false
-                         if multi then
-                            if type(selected) == "table" then
-                                for _, s in pairs(selected) do if s == option then isSelected = true break end end
-                            end
-                        else
-                            isSelected = (selected == option)
-                        end
-                        if isSelected then
-                            Item.TextColor3 = config.Color
-                            Item.BackgroundTransparency = 0.8
-                        end
-                        Item.MouseButton1Click:Connect(function()
-                            if multi then
-                                local found = false
-                                local index = 0
-                                for i, s in pairs(selected) do
-                                    if s == option then found = true index = i break end
-                                end
-                                if found then
-                                    table.remove(selected, index)
-                                else
-                                    table.insert(selected, option)
-                                end
-                            else
-                                selected = option
-                            end
-                            pcall(callback, selected)
-                            RefreshItems(SearchInput and SearchInput.Text or nil)
-                            if not multi then
-                                expanded = false
-                                TweenService:Create(DropdownFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {Size = UDim2.new(1, -4, 0, 38)}):Play()
-                                TweenService:Create(Arrow, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {Rotation = 0}):Play()
-                                DropLabel.Text = text .. ": " .. tostring(selected)
-                            else
-                                DropLabel.Text = text .. ": [" .. #selected .. "]"
-                            end
-                        end)
-                        count = count + 1
-                    end
-                end
-                local headerHeight = 38
-                local searchBarOffset = search and 36 or 0
-                local itemsHeight = (count * 26) + 8
-                local maxItemsHeight = 120
-                ItemContainer.CanvasSize = UDim2.new(0, 0, 0, itemsHeight)
-                if expanded then
-                    local containerVisibleHeight = math.min(itemsHeight, maxItemsHeight)
-                    local totalFrameHeight = headerHeight + searchBarOffset + containerVisibleHeight
-                    TweenService:Create(DropdownFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {
-                        Size = UDim2.new(1, -4, 0, totalFrameHeight)
-                    }):Play()
-                    ItemContainer.Size = UDim2.new(1, 0, 0, containerVisibleHeight)
-                end
-            end
-            if SearchInput then
-                SearchInput:GetPropertyChangedSignal("Text"):Connect(function()
-                    RefreshItems(SearchInput.Text)
-                end)
-            end
-            DropButton.MouseButton1Click:Connect(function()
-                expanded = not expanded
-                if expanded then
-                    RefreshItems(SearchInput and SearchInput.Text or nil)
-                     local searchHeight = search and 36 or 4
-                     TweenService:Create(Arrow, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {Rotation = 180}):Play()
-                else
-                    TweenService:Create(DropdownFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {Size = UDim2.new(1, -4, 0, 38)}):Play()
-                    TweenService:Create(Arrow, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {Rotation = 0}):Play()
-                end
+            
+            DropdownFrame.MouseEnter:Connect(function()
+                TweenService:Create(DropdownFrame, TweenInfo.new(0.15), {BackgroundTransparency = 0.3}):Play()
+                TweenService:Create(DropStroke, TweenInfo.new(0.15), {Color = config.Color, Transparency = 0.4}):Play()
             end)
-            if multi then
-                 DropLabel.Text = text .. ": [" .. #selected .. "]"
-            else
-                 DropLabel.Text = text .. ": " .. tostring(selected)
+            DropdownFrame.MouseLeave:Connect(function()
+                TweenService:Create(DropdownFrame, TweenInfo.new(0.15), {BackgroundTransparency = 0.5}):Play()
+                TweenService:Create(DropStroke, TweenInfo.new(0.15), {Color = Colors.Border, Transparency = 0.7}):Play()
+            end)
+            
+            DropdownFrame.MouseButton1Click:Connect(function()
+                currentDropdownCallback = callback
+                currentDropdownSelected = selected
+                currentDropdownMulti = multi
+                currentDropdownLabel = DropLabel
+                currentDropdownText = text
+                currentDropdownOptions = options
+                
+                TitleText.Text = text
+                PanelSearchBar.Visible = search
+                if search then
+                    PanelItems.Size = UDim2.new(1, -10, 1, -70)
+                    PanelItems.Position = UDim2.new(0, 5, 0, 68)
+                else
+                    PanelItems.Size = UDim2.new(1, -10, 1, -40)
+                    PanelItems.Position = UDim2.new(0, 5, 0, 36)
+                end
+                PanelSearchInput.Text = ""
+                
+                RefreshDropdownItems("")
+                
+                dropdownOpen = true
+                DropdownPanel.Visible = true
+                DropdownPanel.Position = UDim2.new(1, 0, 0, 50)
+                TweenService:Create(DropdownPanel, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+                    Position = UDim2.new(1, -168, 0, 50)
+                }):Play()
+            end)
+            
+            local DropdownAPI = {}
+            function DropdownAPI:Set(newValue)
+                selected = newValue
+                currentDropdownSelected = newValue
+                if multi then
+                    DropLabel.Text = text .. ": [" .. #selected .. "]"
+                else
+                    DropLabel.Text = text .. ": " .. tostring(selected)
+                end
             end
-            return DropdownFrame
+            function DropdownAPI:SetOptions(newOptions)
+                options = newOptions
+                currentDropdownOptions = newOptions
+            end
+            return DropdownAPI
         end
         function Tab:Dropdown(text, options, default, callback)
             return CreateDropdown(text, options, default, callback, false, false)
@@ -1228,5 +1452,49 @@ function CoralX:Window(config)
     end
     return Window
 end
+
+local Window = CoralX:Window({
+    Title = "CoralX Test",
+    Color = Color3.fromRGB(180, 120, 255),
+    Size = {Width = 600, Height = 400}
+})
+
+local MainTab = Window:Tab("Main", "rbxassetid://7072717958")
+local SettingsTab = Window:Tab("Settings", "rbxassetid://7072717958")
+
+MainTab:Paragraph("Welcome!", "This is a test paragraph to display information.")
+
+MainTab:Dropdown("Select Fruit", {"Apple", "Banana", "Orange", "Mango"}, "Apple", function(value)
+    print("Selected:", value)
+end)
+
+MainTab:DropdownSearch("Search Items", {"Item 1", "Item 2", "Item 3", "Item 4", "Item 5"}, "Item 1", function(value)
+    print("Searched:", value)
+end)
+MainTab:MultiDropdown("Select Multiple", {"Red", "Green", "Blue", "Yellow"}, {}, function(values)
+    print("Selected multiple:", table.concat(values, ", "))
+end)
+
+MainTab:Toggle("Enable Feature", false, function(state)
+    print("Toggle:", state)
+end)
+MainTab:Slider("Speed", 0, 100, 50, function(value)
+    print("Slider:", value)
+end)
+
+MainTab:Button("Click Me", function()
+    print("Button clicked!")
+end)
+MainTab:Textbox("Username", "Enter username...", function(text)
+    print("Input:", text)
+end)
+MainTab:Keybind("Toggle Key", Enum.KeyCode.F, function(key)
+    print("Keybind set:", key)
+end)
+SettingsTab:Paragraph("Settings", "Configure your preferences here.")
+SettingsTab:Toggle("Dark Mode", true, function(state)
+    print("Dark mode:", state)
+end)
+
 getfenv().CoralX = CoralX
 return CoralX
